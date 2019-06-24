@@ -162,9 +162,23 @@ runSecureClientWithConfig host port path config options headers app = do
     Exception.bracket
         (Connection.connectTo context (connectionParams host port))
         Connection.connectionClose
-        (\connection -> do
-            stream <-
-                Stream.makeStream (reader config connection) (writer connection)
+        (runSecureClientWithConnection host path config options headers app)
+
+
+runSecureClientWithConnection
+    :: Socket.HostName -- ^ Host
+    -> String.String -- ^ Path
+    -> Config -- ^ Config
+    -> WebSockets.ConnectionOptions -- ^ Options
+    -> WebSockets.Headers -- ^ Headers
+    -> WebSockets.ClientApp a -- ^ Application
+    -> Connection.Connection
+    -> IO.IO a
+runSecureClientWithConnection host path config options headers app connection = do
+    Exception.bracket
+        (Stream.makeStream (reader config connection) (writer connection))
+        Stream.close
+        (\stream -> do
             WebSockets.runClientWithStream stream host path options headers app)
 
 
