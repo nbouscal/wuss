@@ -161,7 +161,7 @@ runSecureClientWithConfig host port path config options headers app = do
     context <- Connection.initConnectionContext
     Exception.bracket
         (Connection.connectTo context (connectionParams host port))
-        Connection.connectionClose
+        (\conn -> IO.putStrLn "closing" Applicative.*> Connection.connectionClose conn)
         (runSecureClientWithConnection host path config options headers app)
 
 
